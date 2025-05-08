@@ -1,0 +1,69 @@
+
+ps-6
+create 'flight_data', 'info', 'scheduled', 'delay'
+
+put 'flight_data', '1', 'info:origin', 'Delhi'
+put 'flight_data', '1', 'info:destination', 'Pune'
+put 'flight_data', '1', 'scheduled:departure_time', '10:00'
+put 'flight_data', '1', 'delay:departure_delay', '10'
+
+put 'flight_data', '2', 'info:origin', 'Mumbai'
+put 'flight_data', '2', 'info:destination', 'Pune'
+put 'flight_data', '2', 'scheduled:departure_time', '2:00'
+put 'flight_data', '2', 'delay:departure_delay', '15'
+
+put 'flight_data', '3', 'info:origin', 'Amritsar'
+put 'flight_data', '3', 'info:destination', 'Pune'
+put 'flight_data', '3', 'scheduled:departure_time', '14:40'
+put 'flight_data', '3', 'delay:departure_delay', '3'
+
+put 'flight_data', '4', 'info:origin', 'Chennai'
+put 'flight_data', '4', 'info:destination', 'Bangalore'
+put 'flight_data', '4', 'scheduled:departure_time', '12:30'
+put 'flight_data', '4', 'delay:departure_delay', '30'
+
+put 'flight_data', '5', 'info:origin', 'Chennai'
+put 'flight_data', '5', 'info:destination', 'Mumbai'
+put 'flight_data', '5', 'scheduled:departure_time', '21:30'
+put 'flight_data', '5', 'delay:departure_delay', '0'
+
+
+CREATE EXTERNAL TABLE flight_data_hive(
+rowkey STRING,
+origin STRING,
+destination STRING,
+departure_time STRING,
+departure_delay INT
+)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES(
+"hbase.columns.mapping"=":key, info:origin, info:destination, scheduled:departure_time, delay:departure_delay"
+)
+TBLPROPERTIES ("hbase.table.name"="flight_data");
+
+
+
+
+
+CREATE EXTERNAL TABLE hive_flight(
+rowkey STRING,
+origin STRING,
+destination STRING,
+departure_time STRING,
+departure_delay INT
+)
+STORED BY 'org.apache.hadoop.hive.hbase.HBaseStorageHandler'
+WITH SERDEPROPERTIES(
+"hbase.columns.mapping"=":key, info:origin, info:destination, scheduled:departure_time, delay:departure_delay"
+)
+TBLPROPERTIES("hbase.table.name"="flight_data");
+
+SELECT AVG(departure_delay) from hive_flight;
+
+
+CREATE INDEX delay_index
+ON TABLE hive_flight (departure_delay)
+AS 'COMPACT'
+WITH DEFERRED REBUILD;
+
+ALTER INDEX delay_index ON hive_flight REBUILD;
